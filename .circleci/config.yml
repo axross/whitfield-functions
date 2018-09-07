@@ -1,0 +1,97 @@
+version: 2
+general_options: &general_options
+  docker:
+    - image: circleci/node:10.4.0
+  working_directory: ~/repo
+jobs:
+  checkout:
+    <<: *general_options
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package-lock.json" }}
+      - run:
+          name: Install dependent packages
+          command: npm ci
+      - save_cache:
+          key: v1-dependencies-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+      - persist_to_workspace:
+          root: ~/repo
+          paths:
+            - .
+  check:
+    <<: *general_options
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          name: Check code
+          command: npm run check
+  lint:
+    <<: *general_options
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          name: Lint code
+          command: npm run lint
+  test:
+    <<: *general_options
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          name: Test code
+          command: npm test -- --ci --verbose --coverage
+  build:
+    <<: *general_options
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          name: Build
+          command: npm run build
+      - persist_to_workspace:
+          root: ~/repo
+          paths:
+            - .
+  deploy:
+    <<: *general_options
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - deploy:
+          name: Deploy
+          command: ./node_modules/.bin/firebase deploy --only functions --token $FIREBASE_TOKEN
+workflows:
+  version: 2
+  default:
+    jobs:
+      - checkout
+      - check:
+          requires:
+            - checkout
+      - lint:
+          requires:
+            - checkout
+      - test:
+          requires:
+            - checkout
+      - build:
+          filters:
+            branches:
+              only: master
+          requires:
+            - checkout
+      - deploy:
+          filters:
+            branches:
+              only: master
+          requires:
+            - check
+            - lint
+            - test
+            - build

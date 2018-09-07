@@ -1,0 +1,26 @@
+{
+  "private": true,
+  "name": "whitfield-functions",
+  "description": "",
+  "author": "Kohei Asai <me@axross.io> (https://axross.io/)",
+  "version": "0.0.0",
+  "dependencies": {
+    "firebase-admin": "^6.0.0",
+    "firebase-functions": "^2.0.5"
+  },
+  "devDependencies": {
+    "firebase-tools": "^4.2.1",
+    "prettier": "^1.14.2",
+    "typescript": "^3.0.3"
+  },
+  "scripts": {
+    "lint": "prettier --list-different ./src/**/*.ts ./src/**/*.tsx",
+    "format": "prettier --write ./src/**/*.ts ./src/**/*.tsx",
+    "check": "tsc --noEmit --pretty",
+    "test": "echo \"Skipped: no test specified\"",
+    "build": "tsc --outDir ./build ./src/**",
+    "serve": "firebase serve --only functions",
+    "deploy": "firebase deploy --only functions"
+  },
+  "main": "build/index.js"
+}
