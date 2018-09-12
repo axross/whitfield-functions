@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import * as functions from 'firebase-functions';
 import { Container } from 'inversify';
 import Configuration from './Configuration';
-import SynthesizeHandler from './SynthesizeHandler';
+import PronunciationHandler from './PronunciationHandler';
 import TextToSpeechApi from './TextToSpeechApi';
 
 const container = new Container();
@@ -14,8 +14,10 @@ container.bind<Configuration>('configuration').toConstantValue({
     privateKey: functions.config().google_cloud.private_key,
   },
 });
-container.bind<SynthesizeHandler>('synthesizeHandler').to(SynthesizeHandler);
+container.bind<PronunciationHandler>('pronunciationHandler').to(PronunciationHandler);
 container.bind<TextToSpeechApi>('textToSpeechApi').to(TextToSpeechApi);
 
 export const ping = functions.https.onRequest((_, response) => response.send('pong'));
-export const synthesize = functions.https.onRequest(container.get<SynthesizeHandler>('synthesizeHandler').onRequest);
+export const getPronunciation = functions.https.onRequest(
+  container.get<PronunciationHandler>('pronunciationHandler').onRequest
+);

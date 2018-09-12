@@ -4,15 +4,15 @@ import TextToSpeechApi, { Gender } from './TextToSpeechApi';
 import ValidationError from './ValidationError';
 
 @injectable()
-class SynthesizeHandler {
+class PronunciationHandler {
   private readonly textToSpeechApi: TextToSpeechApi;
 
   public onRequest = async (request: Request, response: Response): Promise<void> => {
-    const { text: _text, gender: _gender = Gender.MALE, rate: _rate = 0.9, volumeGain: _vg = 0.0 }: any = {
-      ...request.query,
-    };
-
     try {
+      const { text: _text, gender: _gender = Gender.MALE, rate: _rate = 0.9, volumeGain: _vg = 0.0 }: any = {
+        ...request.query,
+      };
+
       const text = validateText(_text);
       const gender = validateGender(_gender);
       const rate = validateRate(_rate);
@@ -26,12 +26,16 @@ class SynthesizeHandler {
           .header('content-disposition', `attachment; filename="${text}.mp3"`)
           .send(audio);
       } catch (err) {
+        console.error(err);
+
         response.status(500).send(err.message);
       }
     } catch (err) {
       if (err instanceof ValidationError) {
         response.status(400).send(err.message);
       } else {
+        console.error(err);
+
         response.status(500).send(err.message);
       }
     }
@@ -85,4 +89,4 @@ const validateVolumeGain = (volumeGain: any): number => {
   return volumeGain;
 };
 
-export default SynthesizeHandler;
+export default PronunciationHandler;
