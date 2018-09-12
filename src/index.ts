@@ -32,4 +32,4 @@ export const ping = functions.https.onRequest((_, response) => response.send('po
 export const synthesize = functions.https.onRequest(
   container.get<SynthesizationHandler>('synthesizeHandler').onRequest
 );
-export const getPictures = functions.https.onRequest(container.get<PictureHandler>('pictureHandler').onRequest);
+export const searchPictures = functions.https.onRequest(container.get<PictureHandler>('pictureHandler').onRequest);
