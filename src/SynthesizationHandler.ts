@@ -4,7 +4,7 @@ import TextToSpeechApi, { Gender } from './TextToSpeechApi';
 import ValidationError from './ValidationError';
 
 @injectable()
-class PronunciationHandler {
+class SynthesizationHandler {
   private readonly textToSpeechApi: TextToSpeechApi;
 
   public onRequest = async (request: Request, response: Response): Promise<void> => {
@@ -89,4 +89,4 @@ const validateVolumeGain = (volumeGain: any): number => {
   return volumeGain;
 };
 
-export default PronunciationHandler;
+export default SynthesizationHandler;

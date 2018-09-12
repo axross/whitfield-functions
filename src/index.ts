@@ -8,7 +8,7 @@ import { Container } from 'inversify';
 import Configuration from './Configuration';
 import PictureApi from './PictureApi';
 import PictureHandler from './PictureHandler';
-import PronunciationHandler from './PronunciationHandler';
+import SynthesizationHandler from './SynthesizationHandler';
 import TextToSpeechApi from './TextToSpeechApi';
 
 const container = new Container();
@@ -25,11 +25,11 @@ container.bind<Configuration>('configuration').toConstantValue({
 });
 container.bind<PictureApi>('pictureApi').to(PictureApi);
 container.bind<PictureHandler>('pictureHandler').to(PictureHandler);
-container.bind<PronunciationHandler>('pronunciationHandler').to(PronunciationHandler);
+container.bind<SynthesizationHandler>('synthesizeHandler').to(SynthesizationHandler);
 container.bind<TextToSpeechApi>('textToSpeechApi').to(TextToSpeechApi);
 
 export const ping = functions.https.onRequest((_, response) => response.send('pong'));
-export const getPronunciation = functions.https.onRequest(
-  container.get<PronunciationHandler>('pronunciationHandler').onRequest
+export const synthesize = functions.https.onRequest(
+  container.get<SynthesizationHandler>('synthesizeHandler').onRequest
 );
 export const getPictures = functions.https.onRequest(container.get<PictureHandler>('pictureHandler').onRequest);
