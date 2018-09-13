@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import * as functions from 'firebase-functions';
 import { inject, injectable } from 'inversify';
 import TextToSpeechApi, { Gender } from './TextToSpeechApi';
 import ValidationError from './ValidationError';
@@ -7,10 +7,10 @@ import ValidationError from './ValidationError';
 class SynthesizationHandler {
   private readonly textToSpeechApi: TextToSpeechApi;
 
-  public onRequest = async (request: Request, response: Response): Promise<void> => {
+  public onCall = async (data: any): Promise<string> => {
     try {
       const { text: _text, gender: _gender = Gender.MALE, rate: _rate = 0.9, volumeGain: _vg = 0.0 }: any = {
-        ...request.query,
+        ...data,
       };
 
       const text = validateText(_text);
@@ -18,26 +18,15 @@ class SynthesizationHandler {
       const rate = validateRate(_rate);
       const volumeGain = validateVolumeGain(_vg);
 
-      try {
-        const audio = await this.textToSpeechApi.synthesize(text, { gender, rate, volumeGain });
+      const audio = await this.textToSpeechApi.synthesize(text, { gender, rate, volumeGain });
 
-        response
-          .type('audio/mp3')
-          .header('content-disposition', `attachment; filename="${text}.mp3"`)
-          .send(audio);
-      } catch (err) {
-        console.error(err);
-
-        response.status(500).send(err.message);
-      }
+      return `data:audio/mp3;base64,${audio.toString('base64')}`;
     } catch (err) {
       if (err instanceof ValidationError) {
-        response.status(400).send(err.message);
-      } else {
-        console.error(err);
-
-        response.status(500).send(err.message);
+        throw new functions.https.HttpsError('invalid-argument', err.message);
       }
+
+      throw err;
     }
   };
 

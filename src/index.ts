@@ -28,8 +28,6 @@ container.bind<PictureHandler>('pictureHandler').to(PictureHandler);
 container.bind<SynthesizationHandler>('synthesizeHandler').to(SynthesizationHandler);
 container.bind<TextToSpeechApi>('textToSpeechApi').to(TextToSpeechApi);
 
-export const ping = functions.https.onRequest((_, response) => response.send('pong'));
-export const synthesize = functions.https.onRequest(
-  container.get<SynthesizationHandler>('synthesizeHandler').onRequest
-);
-export const searchPictures = functions.https.onRequest(container.get<PictureHandler>('pictureHandler').onRequest);
+export const ping = functions.https.onCall(() => 'pong');
+export const synthesize = functions.https.onCall(container.get<SynthesizationHandler>('synthesizeHandler').onCall);
+export const searchPictures = functions.https.onCall(container.get<PictureHandler>('pictureHandler').onCall);

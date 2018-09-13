@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import * as functions from 'firebase-functions';
 import { inject, injectable } from 'inversify';
 import PictureApi from './PictureApi';
 import ValidationError from './ValidationError';
@@ -7,29 +7,21 @@ import ValidationError from './ValidationError';
 class PictureHandler {
   private readonly pictureApi: PictureApi;
 
-  public onRequest = async (request: Request, response: Response): Promise<void> => {
+  public onCall = async (data: any): Promise<string[]> => {
     try {
-      const { text: _text }: any = { ...request.query };
+      const { text: _text }: any = { ...data };
 
       const text = validateText(_text);
 
-      try {
-        const urls = await this.pictureApi.searchPictureUrlsByKeyword(text);
+      const urls = await this.pictureApi.searchPictureUrlsByKeyword(text);
 
-        response.json(urls);
-      } catch (err) {
-        console.error(err);
-
-        response.status(500).send(err.message);
-      }
+      return urls;
     } catch (err) {
       if (err instanceof ValidationError) {
-        response.status(400).send(err.message);
-      } else {
-        console.error(err);
-
-        response.status(500).send(err.message);
+        throw new functions.https.HttpsError('invalid-argument', err.message);
       }
+
+      throw err;
     }
   };
 
