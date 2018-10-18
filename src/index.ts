@@ -2,32 +2,40 @@ process.on('unhandledRejection', err => {
   console.error(err);
 });
 
-import 'reflect-metadata';
+import { asClass, asFunction, asValue, createContainer } from 'awilix';
 import * as functions from 'firebase-functions';
-import { Container } from 'inversify';
-import Configuration from './Configuration';
-import PictureApi from './PictureApi';
-import PictureHandler from './PictureHandler';
-import SynthesizationHandler from './SynthesizationHandler';
-import TextToSpeechApi from './TextToSpeechApi';
+import Configuration from './core/Configuration';
+import Handler from './core/Handler';
+import PictureApi from './repository/PictureApi';
+import TextToSpeechApi from './repository/TextToSpeechApi';
+import createPictureHandler from './handler/createPictureHandler';
+import createSynthesizationHandler from './handler/createSynthesizationHandler';
 
-const container = new Container();
+const container = createContainer();
 
-container.bind<Configuration>('configuration').toConstantValue({
-  googleCloud: {
-    clientEmail: functions.config().google_cloud.client_email,
-    projectId: functions.config().google_cloud.project_id,
-    privateKey: functions.config().google_cloud.private_key,
-  },
-  bingImageSearch: {
-    apiKey: functions.config().bing_image_search.api_key,
-  },
-});
-container.bind<PictureApi>('pictureApi').to(PictureApi);
-container.bind<PictureHandler>('pictureHandler').to(PictureHandler);
-container.bind<SynthesizationHandler>('synthesizeHandler').to(SynthesizationHandler);
-container.bind<TextToSpeechApi>('textToSpeechApi').to(TextToSpeechApi);
+container.register<Configuration>(
+  Symbol.for('configuration'),
+  asValue({
+    googleCloud: {
+      clientEmail: functions.config().google_cloud.client_email,
+      projectId: functions.config().google_cloud.project_id,
+      privateKey: functions.config().google_cloud.private_key,
+    },
+    bingImageSearch: {
+      apiKey: functions.config().bing_image_search.api_key,
+    },
+  })
+);
 
+// apis
+container.register(Symbol.for('pictureApi'), asClass(PictureApi));
+container.register(Symbol.for('textToSpeechApi'), asClass(TextToSpeechApi));
+
+// handlers
+container.register(Symbol.for('pictureHandler'), asFunction(createPictureHandler));
+container.register(Symbol.for('synthesizationHandler'), asFunction(createSynthesizationHandler));
+
+// functions
 export const ping = functions.https.onCall(() => 'pong');
-export const synthesize = functions.https.onCall(container.get<SynthesizationHandler>('synthesizeHandler').onCall);
-export const searchPictures = functions.https.onCall(container.get<PictureHandler>('pictureHandler').onCall);
+export const synthesize = functions.https.onCall(container.resolve<Handler>(Symbol.for('synthesizationHandler')));
+export const searchPictures = functions.https.onCall(container.resolve<Handler>(Symbol.for('pictureHandler')));

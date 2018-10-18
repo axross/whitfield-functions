@@ -1,8 +1,6 @@
 const { TextToSpeechClient } = require('@google-cloud/text-to-speech');
-import { inject, injectable } from 'inversify';
-import Configuration from './Configuration';
+import Configuration from '../core/Configuration';
 
-@injectable()
 class TextToSpeechApi {
   private readonly config: Configuration;
 
@@ -52,8 +50,8 @@ class TextToSpeechApi {
     });
   }
 
-  public constructor(@inject('configuration') configuration: Configuration) {
-    this.config = configuration;
+  public constructor(cradle: any) {
+    this.config = cradle[Symbol.for('configuration')];
   }
 }
 

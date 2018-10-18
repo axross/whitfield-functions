@@ -1,10 +1,7 @@
 import * as request from 'got';
-// import {} from 'got';
-import { inject, injectable } from 'inversify';
-import Configuration from './Configuration';
 import { URL } from 'url';
+import Configuration from '../core/Configuration';
 
-@injectable()
 class PictureApi {
   private readonly config: Configuration;
 
@@ -28,8 +25,8 @@ class PictureApi {
     return imageUrls;
   }
 
-  public constructor(@inject('configuration') configuration: Configuration) {
-    this.config = configuration;
+  public constructor(cradle: any) {
+    this.config = cradle[Symbol.for('configuration')];
   }
 }
 
