@@ -1,6 +1,6 @@
 import * as functions from 'firebase-functions';
 import Handler from '../core/Handler';
-import TextToSpeechApi, { Gender } from '../repository/TextToSpeechApi';
+import TextToSpeechApi, { Gender, SynthesizationFailed } from '../repository/TextToSpeechApi';
 import ValidationError from '../core/ValidationError';
 
 const createSynthesizationHandler = (cradle: any): Handler => async (data: any): Promise<string> => {
@@ -21,41 +21,13 @@ const createSynthesizationHandler = (cradle: any): Handler => async (data: any):
       throw new functions.https.HttpsError('invalid-argument', err.message);
     }
 
-    throw err;
+    if (err instanceof SynthesizationFailed) {
+      throw new functions.https.HttpsError('aborted', err.message);
+    }
+
+    throw new functions.https.HttpsError('internal', err.message);
   }
 };
-
-// @injectable()
-// class SynthesizationHandler {
-//   private readonly textToSpeechApi: TextToSpeechApi;
-
-//   public onCall = async (data: any): Promise<string> => {
-//     try {
-//       const { text: _text, gender: _gender = Gender.MALE, rate: _rate = 0.9, volumeGain: _vg = 0.0 }: any = {
-//         ...data,
-//       };
-
-//       const text = validateText(_text);
-//       const gender = validateGender(_gender);
-//       const rate = validateRate(_rate);
-//       const volumeGain = validateVolumeGain(_vg);
-
-//       const audio = await this.textToSpeechApi.synthesize(text, { gender, rate, volumeGain });
-
-//       return `data:audio/mp3;base64,${audio.toString('base64')}`;
-//     } catch (err) {
-//       if (err instanceof ValidationError) {
-//         throw new functions.https.HttpsError('invalid-argument', err.message);
-//       }
-
-//       throw err;
-//     }
-//   };
-
-//   public constructor(@inject('textToSpeechApi') textToSpeechApi: TextToSpeechApi) {
-//     this.textToSpeechApi = textToSpeechApi;
-//   }
-// }
 
 const validateText = (text: any): string => {
   if (typeof text !== 'string') {
